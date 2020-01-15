@@ -57,6 +57,15 @@ class ganNetwork():
         if seed is not None:
             torch.manual_seed(seed)
 
+        self.gan_model = None
+        self.data_mean = None
+        self.data_std = None
+
+    def check_for_model(self):
+
+        if self.gan_model is None:
+            raise ValueError("No model trained. Run train_gan method first.")
+
     def reset_grad(self, params):
         for p in params:
             if p.grad is not None:
@@ -64,10 +73,9 @@ class ganNetwork():
                 p.grad = Variable(data.new().resize_as_(data).zero_())
 
     def train_gan(self, train_input, n_epochs,
-                  mini_batch_size=64, plot_suffix='test'):
+                  mini_batch_size=64):
 
         Z_dim = np.shape(train_input)[1]
-        print(Z_dim)
 
         d = discriminator(Z_dim, Z_dim*4)
         g = generator(Z_dim, Z_dim*4)
@@ -157,3 +165,37 @@ class ganNetwork():
 
         return
 
+    def create_gan_cat(self, cat_length, return_input=False):
+
+        self.check_for_model()
+
+        n_columns = len(self.data_mean)
+        z_noise = Variable(torch.randn(cat_length, n_columns))
+        G_sample = self.gan_model(z_noise)
+        new_sample = G_sample.detach().numpy() * self.data_std + self.data_mean
+
+        if return_input is False:
+            return new_sample
+        else:
+            return new_sample, z_noise.numpy()
+
+    def save_model(self, filename):
+
+        self.check_for_model()
+
+        torch.save({'model_state_dict': self.gan_model.state_dict(),
+                    'model_train_mean': self.data_mean,
+                    'model_train_stdev': self.data_std},
+                   filename)
+
+    def load_model(self, filename, n_dim):
+
+        g = generator(n_dim, n_dim*4)
+        checkpoint = torch.load(filename)
+        g.load_state_dict(checkpoint['model_state_dict'])
+        g.train_mean = checkpoint['model_train_mean']
+        g.train_stdev = checkpoint['model_train_stdev']
+
+        self.gan_model = g
+        self.data_mean = g.train_mean
+        self.data_std = g.train_stdev
