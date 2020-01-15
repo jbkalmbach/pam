@@ -73,7 +73,7 @@ class ganNetwork():
                 p.grad = Variable(data.new().resize_as_(data).zero_())
 
     def train_gan(self, train_input, n_epochs,
-                  mini_batch_size=64):
+                  mini_batch_size=64, verbose=5):
 
         Z_dim = np.shape(train_input)[1]
 
@@ -101,7 +101,7 @@ class ganNetwork():
         epoch_samples = []
 
         for epoch_num in range(n_epochs):
-            print(epoch_num)
+
             num_batches = np.ceil(len(input_data)/mini_batch_size)
             input_idx = np.arange(len(input_data))
             np.random.shuffle(input_idx)
@@ -148,12 +148,13 @@ class ganNetwork():
                 g_optimizer.step()
                 
                 self.reset_grad(params)
-                
-                if it % 500 == 0:
+
+            if verbose == 0:
+                continue
+            else:
+                if epoch_num % verbose == 0:
                     print('Epoch: %i, Iter: %i, D_loss: %.3f, G_loss: %.3f' %
-                          (epoch_num, it, D_loss, G_loss))
-                if it == 1500:
-                    print(D_fake[:10], D_real[:10])
+                            (epoch_num, it, D_loss, G_loss))
 
             z = Variable(torch.randn(len(train_input), Z_dim))
             G_sample = g(z)
