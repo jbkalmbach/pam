@@ -79,6 +79,8 @@ class ganNetwork():
 
         d = discriminator(Z_dim, Z_dim*4)
         g = generator(Z_dim, Z_dim*4)
+        d.train()
+        g.train()
 
         d_optimizer = optim.Adam(d.parameters(), lr=0.0002)
         g_optimizer = optim.Adam(g.parameters(), lr=0.0002)
@@ -170,6 +172,7 @@ class ganNetwork():
 
         self.check_for_model()
 
+        self.gan_model.eval()
         n_columns = len(self.data_mean)
         z_noise = Variable(torch.randn(cat_length, n_columns))
         G_sample = self.gan_model(z_noise)
