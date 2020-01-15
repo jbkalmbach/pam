@@ -1,5 +1,3 @@
-import sys
-sys.path.append('..')
 import os
 import unittest
 import h5py
