@@ -1,1 +1,2 @@
-from .ganNetwork import ganNetwork
+from .gan import *
+from .defaultArchitectures import *
